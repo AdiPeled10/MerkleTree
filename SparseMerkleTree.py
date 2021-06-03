@@ -9,13 +9,6 @@ def print_error(msg):
     print(msg)
 
 
-class MerkleNode(BinaryNode):
-    def __init__(self, value, lson=None, rson=None):
-        pass
-    def compute_key(self):
-        pass
-
-
 class SparseMerkleTree:
     def __init__(self, depth: int):
         # for 2**256 leaves we need depth of 256
