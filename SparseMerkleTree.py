@@ -57,3 +57,22 @@ class SparseMerkleTree:
             # The subtrees are the same, save only one copy of it
             if node.left_son.key == node.right_son.key:
                 node.left_son = node.right_son
+
+    def get_root_key(self):
+        return self.root.get_key()
+
+    def generate_proof_of_inclusion(self, digest):
+        leaf_number = int(digest, 2)
+        regular_proof = self.root.generate_proof_of_inclusion(leaf_number)
+        # removing the direction bit
+        first_key = regular_proof.pop(0)
+        proof = [key[1:] for key in regular_proof]
+        proof.insert(0, first_key)
+        return proof
+
+    def check_proof_of_inclusion(self, digest, classification_bit, proof):
+        # adding the direction bit to each key
+        first_key = proof.pop(0)
+        regular_proof = [bit + key for bit, key in zip(digest, proof)]
+        regular_proof.insert(0, first_key)
+        return self.root.check_proof_of_inclusion(classification_bit, regular_proof)
