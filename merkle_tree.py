@@ -9,7 +9,7 @@ class Node :
         self.left = None
         self.right = None
         self.parent = None
-        self.data = str(data)
+        self.data = hash_function(data)
 
     def inorder_print(self):
         if self is not None:
@@ -54,7 +54,7 @@ class BinaryMerkleTree :
 
     def node_diffusion(self, node):
         if node is not None:
-            self.hash_calculator(node)
+            self.node_hash_calculator(node)
             self.node_diffusion(node.parent)
 
     def right_binding(self, parent, child):
@@ -65,10 +65,10 @@ class BinaryMerkleTree :
         left_binding(parent, left)
         self.right_binding(parent, right)
 
-    def hash_calculator(self, parent):
+    def node_hash_calculator(self, parent):
         data1 = parent.left.data
         data2 = parent.right.data
-        parent.data = "(" + data1 + ")+(" + data2 + ")"
+        parent.data = hash_function(data1+data2)
 
     def inorder_traversal(self):
         self.root.inorder_print()
@@ -78,6 +78,23 @@ def print_error(msg) :
     # TODO before submit make sure to replace the code with "print('')"
     # This function will help us make all the prints disappear before submit
     print(msg)
+
+
+def hash_function(s):
+    s = str(s)
+    hash_string = sha256(s.encode()).hexdigest()
+    return hash_string
+
+
+def case1(merkle_tree, user_input):
+    data = user_input[2:]
+    node = Node(data)
+    merkle_tree.add_leaf(node)
+
+
+def case2(merkle_tree):
+    print(merkle_tree.root.data)
+
 
 # This function is wrong! Listen to your recording with the improvements
 # def calculate_max_needed_values_for_sparse_tree():
@@ -94,10 +111,18 @@ def print_error(msg) :
 #     return num_hashes_in_tree_level
 
 
+# for x in range(8):
+#     node = Node(x)
+#     merkle_tree.add_leaf(node)
+#
+# merkle_tree.inorder_traversal()
+
+
 merkle_tree = BinaryMerkleTree()
-
-for x in range(8):
-    node = Node(x)
-    merkle_tree.add_leaf(node)
-
-merkle_tree.inorder_traversal()
+while(True):
+    user_input = input()
+    args = user_input.split()
+    if args[0] == '1':
+        case1(merkle_tree, user_input)
+    elif args[0] == '2':
+        case2(merkle_tree)
