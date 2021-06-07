@@ -18,9 +18,24 @@ class Node :
                 self.left.inorder_print()
                 self.right.inorder_print()
 
+class MerkleNode(Node):
+    def __init__(self, left_son, right_son):
+        pass
+    @staticmethod
+    def create_leaf(value):
+        pass
+
+
 def left_binding(parent, child):
     parent.left = child
     child.parent = parent
+
+
+def is_power_of_2(n: int):
+    if n == 0:
+        return False
+    n_minus_one = n - 1
+    return (n & n_minus_one) == 0
 
 
 class BinaryMerkleTree :
@@ -38,13 +53,13 @@ class BinaryMerkleTree :
         right = self.leaves[len(self.leaves) - 1]
 
         # replace root
-        if math.log(len(self.leaves) - 1, 2).is_integer():
+        if is_power_of_2(len(self.leaves) - 1):  # TODO improve
             self.triangle_binding(temp, self.root, right)
             self.root = temp
         elif len(self.leaves) % 2 == 0:
             left = self.leaves[len(self.leaves) - 2]
             grandpa = left.parent
-            self.triangle_binding(temp, left, right)
+            self.triangle_binding(grandpa, left, right)
             self.right_binding(grandpa, temp)
         else:
             left = self.root.right
