@@ -9,6 +9,7 @@ class Node :
         self.left = None
         self.right = None
         self.parent = None
+        self.height = 0
         self.data = hash_function(data)
 
     def inorder_print(self):
@@ -28,6 +29,7 @@ class MerkleNode(Node):
 
 def left_binding(parent, child):
     parent.left = child
+    parent.height = parent.left.height + 1
     child.parent = parent
 
 
@@ -48,23 +50,23 @@ class BinaryMerkleTree :
         if len(self.leaves) == 1:
             self.root = node
             return 1
+        inserted_node_parent = Node(0)
 
-        temp = Node(0)
-        right = self.leaves[len(self.leaves) - 1]
-
-        # replace root
-        if is_power_of_2(len(self.leaves) - 1):  # TODO improve
-            self.triangle_binding(temp, self.root, right)
-            self.root = temp
-        elif len(self.leaves) % 2 == 0:
-            left = self.leaves[len(self.leaves) - 2]
-            grandpa = left.parent
-            self.triangle_binding(grandpa, left, right)
-            self.right_binding(grandpa, temp)
+        # check if current tree is complete
+        if is_power_of_2(len(self.leaves) - 1):
+            self.triangle_binding(inserted_node_parent, self.root, node)
+            self.root = inserted_node_parent
         else:
-            left = self.root.right
-            self.triangle_binding(temp, left, right)
-            self.right_binding(self.root, temp)
+            # find first node with incomplete right subtree
+            curr_node = self.leaves[-2]  # the previous last leaf
+            while curr_node.parent.height == curr_node.height + 1:
+                curr_node = curr_node.parent
+
+            # Add the node to the tree
+            self.right_binding(curr_node.parent, inserted_node_parent)
+            self.triangle_binding(inserted_node_parent, curr_node, node)
+
+        # updating all keys in the path to the new node
         self.node_diffusion(node.parent)
 
     def node_diffusion(self, node):
