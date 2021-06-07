@@ -1,6 +1,7 @@
 from hashlib import sha256
 from BinaryTree import BinaryNode
 from copy import deepcopy
+from merkle_tree import hash_func
 
 
 def print_error(msg):
@@ -101,8 +102,31 @@ class SparseMerkleTree:
         return root_sign, proof
 
     def check_proof_of_inclusion(self, digest, classification_bit, proof):
-        # adding the direction bit to each key
-        first_key = proof.pop(0)
-        regular_proof = [bit + key for bit, key in zip(digest, proof)]
-        regular_proof.insert(0, first_key)
-        return self.root.check_proof_of_inclusion(classification_bit, regular_proof)
+        # parse digest and proof
+        path_int = int(digest, 8)
+        correct_final_result = proof[0]
+        proof = proof[1]
+
+        # compute self-hash-shortcut
+        current_hash_val = classification_bit
+        self_hashes_count = self.depth - 1 - len(proof)
+        while self_hashes_count > 0:
+            self_hashes_count -= 1
+            path_int = path_int >> 1
+            current_hash_val = hash_func(current_hash_val + current_hash_val)
+        if self.depth - 1 > len(proof):  # if at least one iteration was preformed
+            correct_current_hash_val = proof.pop(0)
+            if current_hash_val != correct_current_hash_val:
+                return False
+
+        # compute rest of the hashes using the proof
+        for sibling_hash in proof:
+            if path_int & 1 == BinaryNode.RIGHT_DIRECTION:
+                current_hash_val = hash_func(sibling_hash + current_hash_val)
+            else:
+                current_hash_val = hash_func(current_hash_val + sibling_hash)
+            path_int = path_int >> 1
+
+        # return validation result
+        return current_hash_val == correct_final_result
+
