@@ -50,30 +50,23 @@ class SparseMerkleTree:
             print_error("digest isn't in the correct length!")
 
         # create the path to the digest leaf
-        current = self.root
-        stack = [self.root]
-        for nibble in digest:
-            nibble_bits = format(int(nibble, 8), '04b')
-            for bit in nibble_bits:
-                bit = ord(bit) - SparseMerkleTree.mark_leaf.bit_to_int_offset
-                if bit == BinaryNode.LEFT_DIRECTION:
-                    current.left_son = MerkleNode(current.left_son.key, current.left_son.left_son,
-                                                  current.left_son.right_son)
-                    current = current.left_son
-                else:  # bit == BinaryNode.Right_DIRECTION:
-                    current.right_son = MerkleNode(current.right_son.key, current.right_son.left_son,
-                                                  current.right_son.right_son)
-                    current = current.right_son
-                stack.insert(0, current)
+        path_to_digest = self._get_route_to_leaf(digest)
 
         # update the digest leaf
-        stack[0].key = '1'
-        stack.pop(0)
+        path_to_digest[-1] = MerkleNode('1')
 
         # update the path to the digest leaf and try to segment
-        for node in stack:
-            node.key = hash_func(node.left_son.key + node.right_son.key)
-            # The subtrees are the same, save only one copy of it
+        path_int = int(digest, 8)
+        for i in range(len(path_to_digest) - 2, -1, -1):
+            # update tree
+            if path_int & 1 == BinaryNode.RIGHT_DIRECTION:
+                path_to_digest[i] = MerkleNode(None, path_to_digest[i].left_son, path_to_digest[i + 1])
+            else:
+                path_to_digest[i] = MerkleNode(None, path_to_digest[i + 1], path_to_digest[i].right_son)
+            path_int = path_int >> 1
+
+            # If the subtrees are the same, save only one copy of it
+            node = path_to_digest[i]
             if node.left_son.key == node.right_son.key:
                 node.left_son = node.right_son
 
