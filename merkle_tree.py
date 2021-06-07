@@ -2,38 +2,10 @@
 import math
 import base64
 from hashlib import sha256
+from BinaryTree import BinaryNode
 
 
-class Node:
-    def __init__(self, data):
-        self.left = None
-        self.right = None
-        self.parent = None
-        self.height = 0
-        self.data = data
-
-    def left_binding(self, child):
-        self.left = child
-        self.height = self.left.height + 1
-        child.parent = self
-
-    def right_binding(self, child):
-        self.right = child
-        child.parent = self
-
-    def triangle_binding(self, left, right):
-        self.left_binding(left)
-        self.right_binding(right)
-
-    def inorder_print(self):
-        if self is not None:
-            print(self.height * ' ' + self.data)
-            if self.left is not None:
-                self.left.inorder_print()
-                self.right.inorder_print()
-
-
-class MerkleNode(Node):
+class MerkleBinaryNode(BinaryNode):
     def __init__(self, left_son, right_son, value=None):
         if ((left_son is None or right_son is None) and value is None) or \
              (left_son is not None and right_son is not None and value is not None):
@@ -47,7 +19,7 @@ class MerkleNode(Node):
 
     @staticmethod
     def create_non_hash_leaf(value):
-        leaf = MerkleNode(None, None, '')
+        leaf = MerkleBinaryNode(None, None, '')
         leaf.data = value
         return leaf
 
@@ -68,12 +40,12 @@ class BinaryMerkleTree:
             return ''
         return self.root.data
 
-    def add_leaf(self, node: MerkleNode):
+    def add_leaf(self, node: MerkleBinaryNode):
         self.leaves.append(node)
         if len(self.leaves) == 1:
             self.root = node
             return 1
-        inserted_node_parent = MerkleNode(None, None, 0)
+        inserted_node_parent = MerkleBinaryNode(None, None, 0)
 
         # check if current tree is complete
         if is_power_of_2(len(self.leaves) - 1):
@@ -117,7 +89,7 @@ def hash_function(s):
 
 def case1(merkle_tree, user_input):
     data = user_input[2:]
-    node = MerkleNode(None, None, data)
+    node = MerkleBinaryNode(None, None, data)
     merkle_tree.add_leaf(node)
 
 

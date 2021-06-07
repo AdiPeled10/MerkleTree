@@ -60,15 +60,15 @@ class SparseMerkleTree:
         for i in range(len(path_to_digest) - 2, -1, -1):
             # update tree
             if path_int & 1 == BinaryNode.RIGHT_DIRECTION:
-                path_to_digest[i] = MerkleNode(None, path_to_digest[i].left_son, path_to_digest[i + 1])
+                path_to_digest[i] = MerkleNode(None, path_to_digest[i].left, path_to_digest[i + 1])
             else:
-                path_to_digest[i] = MerkleNode(None, path_to_digest[i + 1], path_to_digest[i].right_son)
+                path_to_digest[i] = MerkleNode(None, path_to_digest[i + 1], path_to_digest[i].right)
             path_int = path_int >> 1
 
             # If the subtrees are the same, save only one copy of it
             node = path_to_digest[i]
-            if node.left_son.key == node.right_son.key:
-                node.left_son = node.right_son
+            if node.left.key == node.right.key:
+                node.left = node.right
 
     def get_root_key(self):
         return self.root.key
@@ -80,7 +80,7 @@ class SparseMerkleTree:
         route_to_digest = self._get_route_to_leaf(digest)
 
         # skip nodes that can be computed using only the digest value
-        while len(route_to_digest) > 1 and route_to_digest[-2].left_son.key == route_to_digest[-2].right_son.key:
+        while len(route_to_digest) > 1 and route_to_digest[-2].left.key == route_to_digest[-2].right.key:
             route_to_digest.pop(-1)
         # if at least one node was removed, append the last hash of digest that is the same as the hash of its sibling
         if len(route_to_digest) < self.depth:
@@ -89,10 +89,10 @@ class SparseMerkleTree:
         # create the rest of the proof
         for i in range(len(route_to_digest) - 2, -1, -1):
             # if the left son is on the path to digest, add the other sibling to the proof
-            if route_to_digest[i].left_son is route_to_digest[i + 1]:
-                proof.append(route_to_digest[i].right_son.key)
+            if route_to_digest[i].left is route_to_digest[i + 1]:
+                proof.append(route_to_digest[i].right.key)
             else:
-                proof.append(route_to_digest[i].left_son.key)
+                proof.append(route_to_digest[i].left.key)
 
         # return proof
         return root_sign, proof
