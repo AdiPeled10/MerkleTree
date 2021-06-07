@@ -1,7 +1,7 @@
 # Adi Peled, 318814308, Itamar Fisch, 312502602
 import math
 import base64
-from MekleNode import MerkleBinaryNode
+from MerkleNode import MerkleBinaryNode
 
 
 class BinaryMerkleTree:

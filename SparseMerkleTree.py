@@ -1,6 +1,6 @@
 from hashlib import sha256
 from BinaryTree import BinaryNode
-from MekleNode import hash_function, MerkleBinaryNode
+from MerkleNode import hash_function, MerkleBinaryNode
 
 
 def print_error(msg):
