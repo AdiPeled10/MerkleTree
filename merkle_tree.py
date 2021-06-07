@@ -27,25 +27,28 @@ class Node:
 
     def inorder_print(self):
         if self is not None:
-            print(self.data)
+            print(self.height * ' ' + self.data)
             if self.left is not None:
                 self.left.inorder_print()
                 self.right.inorder_print()
 
 
 class MerkleNode(Node):
-    def __init__(self, left_son, right_son):
-        data = left_son.data + right_son.data
-        super().__init__(hash_function(data))
-        self.triangle_binding(left_son, right_son)
+    def __init__(self, left_son, right_son, value=None):
+        if ((left_son is None or right_son is None) and value is None) or \
+             (left_son is not None and right_son is not None and value is not None):
+            raise ValueError("Bad parameters! parameters should be 2 MerkleNodes or a non-None value, but never both.")
+        if value is None:
+            data = left_son.data + right_son.data
+            super().__init__(hash_function(data))
+            self.triangle_binding(left_son, right_son)
+        else:
+            super().__init__(hash_function(value))
 
     @staticmethod
-    def create_leaf(value, to_hash=True):
-        leaf = MerkleNode(None, None)
-        if to_hash:
-            leaf.data = hash_function(value)
-        else:
-            leaf.data = value
+    def create_non_hash_leaf(value):
+        leaf = MerkleNode(None, None, '')
+        leaf.data = value
         return leaf
 
     def node_diffusion(self):
@@ -56,16 +59,21 @@ class MerkleNode(Node):
 
 
 class BinaryMerkleTree:
-    def __init__(self) :
+    def __init__(self):
         self.root = None
         self.leaves = []
+
+    def get_root_key(self):
+        if self.root is None:
+            return ''
+        return self.root.data
 
     def add_leaf(self, node: MerkleNode):
         self.leaves.append(node)
         if len(self.leaves) == 1:
             self.root = node
             return 1
-        inserted_node_parent = MerkleNode.create_leaf(0, False)
+        inserted_node_parent = MerkleNode(None, None, 0)
 
         # check if current tree is complete
         if is_power_of_2(len(self.leaves) - 1):
@@ -109,19 +117,23 @@ def hash_function(s):
 
 def case1(merkle_tree, user_input):
     data = user_input[2:]
-    node = MerkleNode.create_leaf(data)
+    node = MerkleNode(None, None, data)
     merkle_tree.add_leaf(node)
 
 
 def case2(merkle_tree):
-    print(merkle_tree.root.data)
+    print(merkle_tree.get_root_key())
 
 
 merkle_tree = BinaryMerkleTree()
-while(True):
+while True:
     user_input = input()
+# for i in range(20):
+#     user_input = '1 ' + chr(ord('a') + i)
     args = user_input.split()
     if args[0] == '1':
         case1(merkle_tree, user_input)
     elif args[0] == '2':
         case2(merkle_tree)
+# merkle_tree.inorder_traversal()
+
