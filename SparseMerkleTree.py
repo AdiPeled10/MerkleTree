@@ -1,6 +1,6 @@
 from hashlib import sha256
 from BinaryTree import BinaryNode
-from merkle_tree import hash_func
+from MekleNode import hash_function, MerkleBinaryNode
 
 
 def print_error(msg):
@@ -9,24 +9,14 @@ def print_error(msg):
     print(msg)
 
 
-class MerkleNode(BinaryNode):
-    def get_route_to_leaf(self, leaf_num):
-        route = []
-        next_node = self
-        while next_node is not None:
-            route.append(next_node)
-
-            next_node = next_node.get_son()
-
-
 class SparseMerkleTree:
     def __init__(self, depth: int):
         # for 2**256 leaves we need depth of 256
         self.depth = depth
-        curr = MerkleNode(0)
+        curr = MerkleBinaryNode.create_non_hash_leaf('0')
         while depth > 0:
             depth -= 1
-            curr_parent = MerkleNode(0, curr, curr)
+            curr_parent = MerkleBinaryNode(curr, curr)
             curr = curr_parent
         self.root = curr
 
@@ -53,16 +43,16 @@ class SparseMerkleTree:
         path_to_digest = self._get_route_to_leaf(digest)
 
         # update the digest leaf
-        path_to_digest[-1] = MerkleNode('1')
+        path_to_digest[-1] = MerkleBinaryNode.create_non_hash_leaf('1')
 
         # update the path to the digest leaf and try to segment
         path_int = int(digest, 8)
         for i in range(len(path_to_digest) - 2, -1, -1):
             # update tree
             if path_int & 1 == BinaryNode.RIGHT_DIRECTION:
-                path_to_digest[i] = MerkleNode(None, path_to_digest[i].left, path_to_digest[i + 1])
+                path_to_digest[i] = MerkleBinaryNode(path_to_digest[i].left, path_to_digest[i + 1])
             else:
-                path_to_digest[i] = MerkleNode(None, path_to_digest[i + 1], path_to_digest[i].right)
+                path_to_digest[i] = MerkleBinaryNode(path_to_digest[i + 1], path_to_digest[i].right)
             path_int = path_int >> 1
 
             # If the subtrees are the same, save only one copy of it
@@ -109,7 +99,7 @@ class SparseMerkleTree:
         while self_hashes_count > 0:
             self_hashes_count -= 1
             path_int = path_int >> 1
-            current_hash_val = hash_func(current_hash_val + current_hash_val)
+            current_hash_val = hash_function(current_hash_val + current_hash_val)
         if self.depth - 1 > len(proof):  # if at least one iteration was preformed
             correct_current_hash_val = proof.pop(0)
             if current_hash_val != correct_current_hash_val:
@@ -118,9 +108,9 @@ class SparseMerkleTree:
         # compute rest of the hashes using the proof
         for sibling_hash in proof:
             if path_int & 1 == BinaryNode.RIGHT_DIRECTION:
-                current_hash_val = hash_func(sibling_hash + current_hash_val)
+                current_hash_val = hash_function(sibling_hash + current_hash_val)
             else:
-                current_hash_val = hash_func(current_hash_val + sibling_hash)
+                current_hash_val = hash_function(current_hash_val + sibling_hash)
             path_int = path_int >> 1
 
         # return validation result

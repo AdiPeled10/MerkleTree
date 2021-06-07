@@ -1,33 +1,7 @@
 # Adi Peled, 318814308, Itamar Fisch, 312502602
 import math
 import base64
-from hashlib import sha256
-from BinaryTree import BinaryNode
-
-
-class MerkleBinaryNode(BinaryNode):
-    def __init__(self, left_son, right_son, value=None):
-        if ((left_son is None or right_son is None) and value is None) or \
-             (left_son is not None and right_son is not None and value is not None):
-            raise ValueError("Bad parameters! parameters should be 2 MerkleNodes or a non-None value, but never both.")
-        if value is None:
-            data = left_son.data + right_son.data
-            super().__init__(hash_function(data))
-            self.triangle_binding(left_son, right_son)
-        else:
-            super().__init__(hash_function(value))
-
-    @staticmethod
-    def create_non_hash_leaf(value):
-        leaf = MerkleBinaryNode(None, None, '')
-        leaf.data = value
-        return leaf
-
-    def node_diffusion(self):
-        if self.left is not None:  # possible only if both sons are not None
-            self.data = hash_function(self.left.data + self.right.data)
-        if self.parent is not None:
-            self.parent.node_diffusion()
+from MekleNode import MerkleBinaryNode
 
 
 class BinaryMerkleTree:
@@ -79,12 +53,6 @@ def is_power_of_2(n: int):
         return False
     n_minus_one = n - 1
     return (n & n_minus_one) == 0
-
-
-def hash_function(s):
-    s = str(s)
-    hash_string = sha256(s.encode()).hexdigest()
-    return hash_string
 
 
 def case1(merkle_tree, user_input):
