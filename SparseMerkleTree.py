@@ -1,6 +1,5 @@
 from hashlib import sha256
 from BinaryTree import BinaryNode
-from copy import deepcopy
 from merkle_tree import hash_func
 
 
@@ -53,15 +52,19 @@ class SparseMerkleTree:
         # create the path to the digest leaf
         current = self.root
         stack = [self.root]
-        for bit in digest:
-            bit = ord(bit) - SparseMerkleTree.mark_leaf.bit_to_int_offset
-            if bit == BinaryNode.LEFT_DIRECTION:
-                current.left_son = deepcopy(current.left_son)
-                current = current.left_son
-            else:  # bit == BinaryNode.Right_DIRECTION:
-                current.right_son = deepcopy(current.right_son)
-                current = current.right_son
-            stack.insert(0, current)
+        for nibble in digest:
+            nibble_bits = format(int(nibble, 8), '04b')
+            for bit in nibble_bits:
+                bit = ord(bit) - SparseMerkleTree.mark_leaf.bit_to_int_offset
+                if bit == BinaryNode.LEFT_DIRECTION:
+                    current.left_son = MerkleNode(current.left_son.key, current.left_son.left_son,
+                                                  current.left_son.right_son)
+                    current = current.left_son
+                else:  # bit == BinaryNode.Right_DIRECTION:
+                    current.right_son = MerkleNode(current.right_son.key, current.right_son.left_son,
+                                                  current.right_son.right_son)
+                    current = current.right_son
+                stack.insert(0, current)
 
         # update the digest leaf
         stack[0].key = '1'
@@ -69,13 +72,13 @@ class SparseMerkleTree:
 
         # update the path to the digest leaf and try to segment
         for node in stack:
-            node.key = sha256(node.left_son.key + node.right_son.key)
+            node.key = hash_func(node.left_son.key + node.right_son.key)
             # The subtrees are the same, save only one copy of it
             if node.left_son.key == node.right_son.key:
                 node.left_son = node.right_son
 
     def get_root_key(self):
-        return self.root.get_key()
+        return self.root.key
 
     def generate_proof_of_inclusion(self, digest):
         # initialize
