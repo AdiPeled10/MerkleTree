@@ -4,13 +4,26 @@ import base64
 from hashlib import sha256
 
 
-class Node :
+class Node:
     def __init__(self, data) :
         self.left = None
         self.right = None
         self.parent = None
         self.height = 0
         self.data = hash_function(data)
+
+    def left_binding(self, child):
+        self.left = child
+        self.height = self.left.height + 1
+        child.parent = self
+
+    def right_binding(self, child):
+        self.right = child
+        child.parent = self
+
+    def triangle_binding(self, left, right):
+        self.left_binding(left)
+        self.right_binding(right)
 
     def inorder_print(self):
         if self is not None:
@@ -25,12 +38,6 @@ class MerkleNode(Node):
     @staticmethod
     def create_leaf(value):
         pass
-
-
-def left_binding(parent, child):
-    parent.left = child
-    parent.height = parent.left.height + 1
-    child.parent = parent
 
 
 def is_power_of_2(n: int):
@@ -54,7 +61,7 @@ class BinaryMerkleTree :
 
         # check if current tree is complete
         if is_power_of_2(len(self.leaves) - 1):
-            self.triangle_binding(inserted_node_parent, self.root, node)
+            inserted_node_parent.triangle_binding(self.root, node)
             self.root = inserted_node_parent
         else:
             # find first node with incomplete right subtree
@@ -63,8 +70,8 @@ class BinaryMerkleTree :
                 curr_node = curr_node.parent
 
             # Add the node to the tree
-            self.right_binding(curr_node.parent, inserted_node_parent)
-            self.triangle_binding(inserted_node_parent, curr_node, node)
+            curr_node.parent.right_binding(inserted_node_parent)
+            inserted_node_parent.triangle_binding(curr_node, node)
 
         # updating all keys in the path to the new node
         self.node_diffusion(node.parent)
@@ -73,14 +80,6 @@ class BinaryMerkleTree :
         if node is not None:
             self.node_hash_calculator(node)
             self.node_diffusion(node.parent)
-
-    def right_binding(self, parent, child):
-        parent.right = child
-        child.parent = parent
-
-    def triangle_binding(self, parent, left, right):
-        left_binding(parent, left)
-        self.right_binding(parent, right)
 
     def node_hash_calculator(self, parent):
         data1 = parent.left.data
