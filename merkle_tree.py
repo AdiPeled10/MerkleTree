@@ -5,12 +5,12 @@ from hashlib import sha256
 
 
 class Node:
-    def __init__(self, data) :
+    def __init__(self, data):
         self.left = None
         self.right = None
         self.parent = None
         self.height = 0
-        self.data = hash_function(data)
+        self.data = data
 
     def left_binding(self, child):
         self.left = child
@@ -32,12 +32,27 @@ class Node:
                 self.left.inorder_print()
                 self.right.inorder_print()
 
+
 class MerkleNode(Node):
     def __init__(self, left_son, right_son):
-        pass
+        data = left_son.data + right_son.data
+        super().__init__(hash_function(data))
+        self.triangle_binding(left_son, right_son)
+
     @staticmethod
-    def create_leaf(value):
-        pass
+    def create_leaf(value, to_hash=True):
+        leaf = MerkleNode(None, None)
+        if to_hash:
+            leaf.data = hash_function(value)
+        else:
+            leaf.data = value
+        return leaf
+
+    def node_diffusion(self):
+        if self.left is not None:  # possible only if both sons are not None
+            self.data = hash_function(self.left.data + self.right.data)
+        if self.parent is not None:
+            self.parent.node_diffusion()
 
 
 def is_power_of_2(n: int):
@@ -52,12 +67,12 @@ class BinaryMerkleTree :
         self.root = None
         self.leaves = []
 
-    def add_leaf(self, node):
+    def add_leaf(self, node: MerkleNode):
         self.leaves.append(node)
         if len(self.leaves) == 1:
             self.root = node
             return 1
-        inserted_node_parent = Node(0)
+        inserted_node_parent = MerkleNode.create_leaf(0, False)
 
         # check if current tree is complete
         if is_power_of_2(len(self.leaves) - 1):
@@ -74,17 +89,7 @@ class BinaryMerkleTree :
             inserted_node_parent.triangle_binding(curr_node, node)
 
         # updating all keys in the path to the new node
-        self.node_diffusion(node.parent)
-
-    def node_diffusion(self, node):
-        if node is not None:
-            self.node_hash_calculator(node)
-            self.node_diffusion(node.parent)
-
-    def node_hash_calculator(self, parent):
-        data1 = parent.left.data
-        data2 = parent.right.data
-        parent.data = hash_function(data1+data2)
+        inserted_node_parent.node_diffusion()
 
     def inorder_traversal(self):
         self.root.inorder_print()
@@ -104,7 +109,7 @@ def hash_function(s):
 
 def case1(merkle_tree, user_input):
     data = user_input[2:]
-    node = Node(data)
+    node = MerkleNode.create_leaf(data)
     merkle_tree.add_leaf(node)
 
 
