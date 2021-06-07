@@ -60,6 +60,9 @@ class SparseMerkleTree:
             if node.left.key == node.right.key:
                 node.left = node.right
 
+        # update the keys from the marked node towards the root
+        path_to_digest[-1].node_diffusion()
+
     def get_root_key(self):
         return self.root.key
 
