@@ -55,14 +55,7 @@ class MerkleNode(Node):
             self.parent.node_diffusion()
 
 
-def is_power_of_2(n: int):
-    if n == 0:
-        return False
-    n_minus_one = n - 1
-    return (n & n_minus_one) == 0
-
-
-class BinaryMerkleTree :
+class BinaryMerkleTree:
     def __init__(self) :
         self.root = None
         self.leaves = []
@@ -101,6 +94,13 @@ def print_error(msg) :
     print(msg)
 
 
+def is_power_of_2(n: int):
+    if n == 0:
+        return False
+    n_minus_one = n - 1
+    return (n & n_minus_one) == 0
+
+
 def hash_function(s):
     s = str(s)
     hash_string = sha256(s.encode()).hexdigest()
@@ -115,28 +115,6 @@ def case1(merkle_tree, user_input):
 
 def case2(merkle_tree):
     print(merkle_tree.root.data)
-
-
-# This function is wrong! Listen to your recording with the improvements
-# def calculate_max_needed_values_for_sparse_tree():
-#     num_hashes_in_tree_level = [0] * 257
-#     nodes_in_level = 2 ** 256
-#     num_possible_values_in_level = 2
-#     for i in range(-1, -len(num_hashes_in_tree_level) - 1, -1):
-#         if num_possible_values_in_level < nodes_in_level:
-#             num_hashes_in_tree_level[i] = num_possible_values_in_level
-#             num_possible_values_in_level *= num_possible_values_in_level
-#         else:
-#             num_hashes_in_tree_level[i] = nodes_in_level
-#         nodes_in_level >>= 1
-#     return num_hashes_in_tree_level
-
-
-# for x in range(8):
-#     node = Node(x)
-#     merkle_tree.add_leaf(node)
-#
-# merkle_tree.inorder_traversal()
 
 
 merkle_tree = BinaryMerkleTree()
