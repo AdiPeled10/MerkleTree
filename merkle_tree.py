@@ -47,6 +47,28 @@ def print_error(msg) :
     # This function will help us make all the prints disappear before submit
     print(msg)
 
+def proof_of_inclusion(m_tree, node_number):
+    proof = str(m_tree.root.data)
+    node = m_tree.leaves[node_number]
+    while node.data != m_tree.root.data:
+        proof += " " + get_prefix(node) + get_brother(node)
+        node = node.parent
+    return proof
+
+
+def get_prefix(node):
+    if node.parent.left.data == node.data:
+        return "0"
+    return "1"
+
+
+def get_brother(node):
+    left_data = node.parent.left.data
+    right_data = node.parent.right.data
+    if left_data == node.data:
+        return str(right_data)
+    return str(left_data)
+
 
 def is_power_of_2(n: int):
     if n == 0:
@@ -65,6 +87,29 @@ def case2(merkle_tree):
     print(merkle_tree.get_root_key())
 
 
+def case3(m_tree, node_number):
+    print(proof_of_inclusion(m_tree, node_number))
+
+
+def case4(arg):
+    temp = arg[1]
+    root = arg[2]
+    for index in range(3, len(arg)-1):
+        if arg[index][0] == '0':
+            # temp = hash_function(arg[index][1:]+temp)
+            print("-0-")
+        else:
+            # temp = hash_function(temp+arg[index][1:])
+            print("-1-")
+    print(temp)
+    print(root)
+    if temp == root:
+        print("True")
+        return
+    print("False")
+
+
+
 merkle_tree = BinaryMerkleTree()
 while True:
     user_input = input()
@@ -75,5 +120,10 @@ while True:
         case1(merkle_tree, user_input)
     elif args[0] == '2':
         case2(merkle_tree)
+    elif args[0] == '3':
+        case3(merkle_tree, int(args[1]))
+    elif args[0] == '4' :
+        case4(merkle_tree, args)
+
 # merkle_tree.inorder_traversal()
 
