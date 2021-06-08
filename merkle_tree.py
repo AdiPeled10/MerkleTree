@@ -1,7 +1,17 @@
 # Adi Peled, 318814308, Itamar Fisch, 312502602
 import math
 import base64
+
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
+
 from MerkleNode import MerkleBinaryNode, hash_function
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography import x509
 
 
 class BinaryMerkleTree:
@@ -104,6 +114,29 @@ def case4(arg):
     print("False")
 
 
+def case5():
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
+    public_key = private_key.public_key()
+
+    pem_private_key = private_key.private_bytes(encoding=serialization.Encoding.PEM,
+                                                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                                                encryption_algorithm=serialization.NoEncryption())\
+        .decode("utf-8")
+    pem_public_key = private_key.public_key().public_bytes(serialization.Encoding.PEM,
+                                                           serialization.PublicFormat.SubjectPublicKeyInfo)\
+        .decode("utf-8")
+    print(pem_private_key)
+    print(pem_public_key)
+
+
+def case6():
+    pass
+
+
+def case7():
+    pass
+
+
 merkle_tree = BinaryMerkleTree()
 while True:
     user_input = input()
@@ -116,8 +149,13 @@ while True:
         case2(merkle_tree)
     elif args[0] == '3':
         case3(merkle_tree, int(args[1]))
-    elif args[0] == '4' :
+    elif args[0] == '4':
         case4(args)
+    elif args[0] == '5':
+        case5()
+    elif args[0] == '6':
+        case6(args)
+    elif args[0] == '7':
+        case7(args)
 
 # merkle_tree.inorder_traversal()
-
