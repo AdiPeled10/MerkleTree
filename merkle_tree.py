@@ -86,14 +86,59 @@ def hash_function(s):
     return hash_string
 
 
-def case1(merkle_tree, user_input):
+def proof_of_inclusion(m_tree, node_number):
+    proof = str(m_tree.root.data)
+    node = m_tree.leaves[node_number]
+    while node.data != m_tree.root.data:
+        proof += " " + get_prefix(node) + get_brother(node)
+        node = node.parent
+    return proof
+
+
+def get_brother(node):
+    left_data = node.parent.left.data
+    right_data = node.parent.right.data
+    if left_data == node.data:
+        return str(right_data)
+    return str(left_data)
+
+
+def get_prefix(node):
+    if node.parent.left.data == node.data:
+        return "0"
+    return "1"
+
+
+def case1(m_tree, user_input):
     data = user_input[2:]
     node = Node(data)
-    merkle_tree.add_leaf(node)
+    m_tree.add_leaf(node)
 
 
-def case2(merkle_tree):
-    print(merkle_tree.root.data)
+def case2(m_tree):
+    print(m_tree.root.data)
+
+
+def case3(m_tree, node_number):
+    print(proof_of_inclusion(m_tree, node_number))
+
+
+def case4(m_tree, arg):
+    temp = arg[1]
+    root = arg[2]
+    for index in range(3, len(arg)-1):
+        if arg[index][0] == '0':
+            temp = hash_function(arg[index][1:]+temp)
+            print("-0-")
+        else:
+            temp = hash_function(temp+arg[index][1:])
+            print("-1-")
+    print(temp)
+    print(root)
+    if temp == root:
+        print("True")
+        return
+    print("False")
 
 
 # This function is wrong! Listen to your recording with the improvements
@@ -119,10 +164,26 @@ def case2(merkle_tree):
 
 
 merkle_tree = BinaryMerkleTree()
-while(True):
+
+node = Node("a")
+merkle_tree.add_leaf(node)
+node = Node("b")
+merkle_tree.add_leaf(node)
+node = Node("c")
+merkle_tree.add_leaf(node)
+node = Node("d")
+merkle_tree.add_leaf(node)
+
+case2(merkle_tree)
+
+while True:
     user_input = input()
     args = user_input.split()
     if args[0] == '1':
         case1(merkle_tree, user_input)
     elif args[0] == '2':
         case2(merkle_tree)
+    elif args[0] == '3':
+        case3(merkle_tree, int(args[1]))
+    elif args[0] == '4':
+        case4(merkle_tree, args)
