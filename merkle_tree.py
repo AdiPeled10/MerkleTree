@@ -1,7 +1,7 @@
 # Adi Peled, 318814308, Itamar Fisch, 312502602
 import math
 import base64
-from MerkleNode import MerkleBinaryNode
+from MerkleNode import MerkleBinaryNode, hash_function
 
 
 class BinaryMerkleTree:
@@ -47,27 +47,26 @@ def print_error(msg) :
     # This function will help us make all the prints disappear before submit
     print(msg)
 
+
 def proof_of_inclusion(m_tree, node_number):
     proof = str(m_tree.root.data)
     node = m_tree.leaves[node_number]
     while node.data != m_tree.root.data:
-        proof += " " + get_prefix(node) + get_brother(node)
+        proof += " " + get_prefix_of_brother(node) + get_brother(node)
         node = node.parent
     return proof
 
 
-def get_prefix(node):
+def get_prefix_of_brother(node):
     if node.parent.left.data == node.data:
-        return "0"
-    return "1"
+        return "1"
+    return "0"
 
 
 def get_brother(node):
-    left_data = node.parent.left.data
-    right_data = node.parent.right.data
-    if left_data == node.data:
-        return str(right_data)
-    return str(left_data)
+    if node.parent.left.data == node.data:
+        return str(node.parent.right.data)
+    return str(node.parent.left.data)
 
 
 def is_power_of_2(n: int):
@@ -77,14 +76,14 @@ def is_power_of_2(n: int):
     return (n & n_minus_one) == 0
 
 
-def case1(merkle_tree, user_input):
-    data = user_input[2:]
+def case1(m_tree, u_input):
+    data = u_input[2:]
     node = MerkleBinaryNode(None, None, data)
-    merkle_tree.add_leaf(node)
+    m_tree.add_leaf(node)
 
 
-def case2(merkle_tree):
-    print(merkle_tree.get_root_key())
+def case2(m_tree):
+    print(m_tree.get_root_key())
 
 
 def case3(m_tree, node_number):
@@ -94,20 +93,15 @@ def case3(m_tree, node_number):
 def case4(arg):
     temp = arg[1]
     root = arg[2]
-    for index in range(3, len(arg)-1):
+    for index in range(3, len(arg)):
         if arg[index][0] == '0':
-            # temp = hash_function(arg[index][1:]+temp)
-            print("-0-")
+            temp = hash_function(arg[index][1:]+temp)
         else:
-            # temp = hash_function(temp+arg[index][1:])
-            print("-1-")
-    print(temp)
-    print(root)
+            temp = hash_function(temp+arg[index][1:])
     if temp == root:
         print("True")
         return
     print("False")
-
 
 
 merkle_tree = BinaryMerkleTree()
@@ -123,7 +117,7 @@ while True:
     elif args[0] == '3':
         case3(merkle_tree, int(args[1]))
     elif args[0] == '4' :
-        case4(merkle_tree, args)
+        case4(args)
 
 # merkle_tree.inorder_traversal()
 
