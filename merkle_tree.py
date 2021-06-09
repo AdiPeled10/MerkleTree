@@ -121,7 +121,10 @@ while True:
     user_input = input()
 # for i in range(20):
 #     user_input = '1 ' + chr(ord('a') + i)
-    option = user_input[0]  # TODO multichar option
+    option_len = user_input.find(' ')
+    if option_len == -1:
+        option_len = len(user_input)
+    option = user_input[:option_len]
     if option == '1':
         case1(merkle_tree, user_input)
     elif option == '2':
