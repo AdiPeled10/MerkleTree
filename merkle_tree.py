@@ -79,14 +79,14 @@ def case3(m_tree, node_number):
 
 def case4(user_input):
     arg = user_input.split(' ')
-    temp = arg[1]
+    curr_hash = hash_function(arg[1])
     root = arg[2]
     for index in range(3, len(arg)):
         if arg[index][0] == '0':
-            temp = hash_function(arg[index][1:]+temp)
+            curr_hash = hash_function(arg[index][1:] + curr_hash)
         else:
-            temp = hash_function(temp+arg[index][1:])
-    if temp == root:
+            curr_hash = hash_function(curr_hash + arg[index][1:])
+    if curr_hash == root:
         print("True")
         return
     print("False")
