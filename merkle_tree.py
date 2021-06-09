@@ -66,6 +66,30 @@ def case2(merkle_tree):
     print(merkle_tree.get_root_key())
 
 
+def read_key_from_user(prefix=''):
+    line = input()
+    key = [prefix]
+    while line != '':
+        key.append(line)
+        line = input()
+    return '\n'.join(key)
+
+
+def sign_root(merkle_tree, sign_algo, private_key):
+    sk_bytes = private_key.encode('ASCII')
+    data = merkle_tree.get_root_key().encode('ASCII')
+    sign = sign_algo.sign(data, sk_bytes)
+    print(sign)
+
+
+def verify_sign(sign_algo, pub_key):
+    user_input = input()
+    sign_len = user_input.find(' ')
+    sign = user_input[:sign_len]
+    signed_text = user_input[sign_len + 1:].encode('ASCII')
+    print(sign_algo.verify(signed_text, pub_key, sign))
+
+
 merkle_tree = BinaryMerkleTree()
 sign_algo = RSAsignature.RSAsignature
 while True:
@@ -82,58 +106,13 @@ while True:
         print(sk)
         print(vk)
     elif option == '6':
-        user_input = '''6 -----BEGIN RSA PRIVATE KEY-----
-MIIEowIBAAKCAQEA1MAmLr5TwN8OnQF9OjfWGyGuHfl5056u7XBjYcsidkQHVLkK
-8NhFzSvBnQbi18PcXVSLusLPVnGs6a9rfN9NkCM6uSom0+lpFgMWuD/7w0HPIW7C
-w0hVlFNWvZ8vv5uzA/mzpF8S1fRmCMkfQyP4TDJ2MImQxcdkWDpFDq1pmvRJweav
-zUnc2eUmuz4bwLYwv3CBKDlCSdIAFCkVP6PJl8cbZkOPqbVPMW+MLf+pZrKfWczC
-xCnzHmLbzngClQp+4meAtGOGgKKwsmS1eA0BAYfao0g+cu1ESU5ePea/jrX0nJON
-vDOAeh00keQvxE1xoEnKppbKT2F6RTyBITbCmwIDAQABAoIBAH0iQ5MMyVBRIlRA
-svpSKzGsHrBsszZASF1J1HqJs0xiePlhGUlNu8iQqwGEMlp8ThnrB4Ci4rbSh8Sv
-NAavhPx5bCnK3CmaSP/0cyGOKLPQ+laMwiuAWS2z0voXLkuB9copzXqpnPeRF46l
-VSj1eC7BI3krAKcDv0aRh1q5rrq/T3sH76nENwjxRVig9wZ1jWNBqpWD7LOx2M8I
-NcW4ZbcALbREzKEyydZ1BBx0FXMYyeJRvRdmLzNCb7RZ/wz4B/1bSoUUi8mTBF6x
-ft6fZ6JQNak9r2PEvc7eh+FWoDF3Gu3PBFb0poX7SdWWle9qG6efTSiavUo+cetS
-Qb0qV4kCgYEA+weJpApGEqxKwCe8oN+pd42QOmnKEzqQlZ33pSP97VmOQj6GcXfu
-onnH/0hu4jozj5N96kOCDjDPdpCOvUgzupJBhiRr1M/4y8f+SoWrRCuHHscnfh5Q
-pv+iwpSHTcV8ys2fGowpmd9tZfGerJkvAcD/3jG1Mo+0anemHAoCbXUCgYEA2PaT
-rBVXKJovd9ZjPqWX7MWhTh1NFGCquQPe4cX5h8wIgjSBqozsosKzKYHmK/kw7yU/
-P9UvCiEbiowPiqDZoSbZ6twpf2bcXjaVKWdRqFD+OvGXEvpPVvdbRUXv0J9UDsd1
-EDM5/lX6Sja54ibIKP+okcjH3YPd4xbRvZoyHc8CgYARJgGsGBuTWPu+RrinEMBl
-72DD7MgmKiEIZ4MsX9oP5cdHFThf9f5yUPltoggZIjq1ezDl2PjAeWsiwVtO6OjH
-vQgG3uQS5KYtXZssghciEAsp+hbjkbSWw+3ddwILOQt+Wy+cQ6jv3wh9J1VcmxZP
-+1w/VIv5SUHc6BGL5s8lpQKBgQC4zfdlOdw+0m6iZfOtNgHdhU1rqxuvwtNIutpL
-d4WfvRR2S+Ey88zQqoVPUr1LMXwUB6cDaUQjHaZG8hx+2ZnmYaB3I8cZJPWKLnYJ
-iV8Nvsd+T7B+UsXn7tRIglTOYBiKaiz1epzoXjXOpyTYVG5kNbhRTTOpJJyIxTQs
-iz4rEwKBgBxxJ6t4F8APkYkXaY5EB/Z6EtJJDbKgoqBkfWuVZ0DzPBmVKUbP6EKM
-T085EM/HlQer1QQjfkdepVuCL7mdDjKcxVMiuMKPWtVlsJjtJMa11smmdqZ5UT/w
-6R54/knAIkDXNlGE2xBXCcfKdhF2+lICi5COWEQk5NASSVdgfKjN
------END RSA PRIVATE KEY-----'''
-        sk_bytes = user_input[2:].encode('ASCII')
-        data = merkle_tree.get_root_key().encode('ASCII')
-        sign = sign_algo.sign(data, sk_bytes)
-        print(sign)
+        private_key = user_input[2:]
+        private_key = read_key_from_user(private_key)
+        sign_root(merkle_tree, sign_algo, private_key)
     elif user_input[0] == '7':
-        user_input = '''7 -----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1MAmLr5TwN8OnQF9OjfW
-GyGuHfl5056u7XBjYcsidkQHVLkK8NhFzSvBnQbi18PcXVSLusLPVnGs6a9rfN9N
-kCM6uSom0+lpFgMWuD/7w0HPIW7Cw0hVlFNWvZ8vv5uzA/mzpF8S1fRmCMkfQyP4
-TDJ2MImQxcdkWDpFDq1pmvRJweavzUnc2eUmuz4bwLYwv3CBKDlCSdIAFCkVP6PJ
-l8cbZkOPqbVPMW+MLf+pZrKfWczCxCnzHmLbzngClQp+4meAtGOGgKKwsmS1eA0B
-AYfao0g+cu1ESU5ePea/jrX0nJONvDOAeh00keQvxE1xoEnKppbKT2F6RTyBITbC
-mwIDAQAB
------END PUBLIC KEY-----
-'''
         pub_key = user_input[2:]
-        # user_input = input()
-        user_input = '''LhnptHJUc4M0GVZR+wbp5NC6owLwH2+N/UpOKV6jnyH8iA8YoVSQkMU63z8QZyr50L1f4hTWSxZbjzeQ1Rm/1OyAyX9QdQHIrMWRjOx0GPfqPi4wmcmF9ZxPr7ShwRZtbqz9mAekKYDell44Pj21xKsFFy4PgpnxrXFNppPOA3ZpQk245bYPIdzYpcmq0FyYx5RQQCQYBV69QrQOAvvkVVkwZbiqI0/+tZWmfNdV/x6E3PWYljSccMLW/m4nhcy+XQ39Q2oxIzYlobwndW3epxEReLzP7qeN9BR/BVew2yCn4quhm1fA7544mpZaW0VynQDRHBy7gqJDhuWRLjKOcQ== ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb'''
-        sign_len = user_input.find(' ')
-        sign = user_input[:sign_len]
-        signed_text = user_input[sign_len + 1:].encode('ASCII')
-        print(sign_algo.verify(signed_text, pub_key, sign))
-
-
-
+        pub_key = read_key_from_user(pub_key)
+        verify_sign(sign_algo, pub_key)
 
 # merkle_tree.inorder_traversal()
 
