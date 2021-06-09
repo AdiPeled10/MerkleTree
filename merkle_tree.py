@@ -1,6 +1,7 @@
 # Adi Peled, 318814308, Itamar Fisch, 312502602
 from MerkleNode import MerkleBinaryNode, hash_function
 import RSAsignature
+from SparseMerkleTree import SparseMerkleTree
 
 
 class BinaryMerkleTree:
@@ -115,6 +116,7 @@ def verify_sign(sign_algo, pub_key):
     print(sign_algo.verify(signed_text, pub_key, sign))
 
 
+sparse_merkle_tree = SparseMerkleTree(256)
 merkle_tree = BinaryMerkleTree()
 sign_algo = RSAsignature.RSAsignature
 while True:
@@ -146,6 +148,27 @@ while True:
         pub_key = user_input[2:]
         pub_key = read_key_from_user(pub_key)
         verify_sign(sign_algo, pub_key)
+    elif option == '8':
+        digest = user_input[2:]
+        sparse_merkle_tree.mark_leaf(digest)
+    elif option == '9':
+        print(sparse_merkle_tree.get_root_key())
+    elif option == '10':
+        digest = user_input[3:]
+        root_key, proof = sparse_merkle_tree.generate_proof_of_inclusion(digest)
+        print(root_key, end=' ')
+        for key in proof:
+            print(key, end=' ')
+        print()
+    elif option == '11':
+        arg1_end = user_input.find(' ', option_len + 1)
+        arg2_end = arg1_end + 2  # +1 to skip space and another +1 for the len of the classification bit
+        digest = user_input[option_len + 1:arg1_end]
+        classification_bit = user_input[arg1_end + 1: arg2_end]
+        proof = user_input[arg2_end + 1:].split(' ')
+        sparse_merkle_tree.check_proof_of_inclusion(digest, classification_bit, proof)
 
-# merkle_tree.inorder_traversal()
+
+
+
 
