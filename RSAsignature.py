@@ -3,6 +3,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import serialization
+import base64
+
 
 
 class RSAsignature:
@@ -26,7 +28,7 @@ class RSAsignature:
         return private_pem, public_pem
 
     @staticmethod
-    def sign(data, pem_private_key):
+    def sign(data: bytes, pem_private_key):
         private_key = serialization.load_pem_private_key(pem_private_key, None, default_backend())
 
         signature = private_key.sign(
@@ -37,7 +39,7 @@ class RSAsignature:
             ),
             hashes.SHA256()
         )
-        return signature
+        return base64.b64encode(signature)
 
     @staticmethod
     def verify(data, pem_public_key, signature):
