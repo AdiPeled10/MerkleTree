@@ -37,6 +37,14 @@ class BinaryMerkleTree:
         # updating all keys in the path to the new node
         inserted_node_parent.node_diffusion()
 
+    def proof_of_inclusion(self, node_number):
+        proof = str(self.root.data)
+        node = self.leaves[node_number]
+        while node.data != self.root.data:
+            proof += " " + node.get_prefix_of_brother() + node.get_brother_data()
+            node = node.parent
+        return proof
+
     def inorder_traversal(self):
         self.root.inorder_print()
 
@@ -45,27 +53,6 @@ def print_error(msg) :
     # TODO before submit make sure to replace the code with "print('')"
     # This function will help us make all the prints disappear before submit
     print(msg)
-
-
-def proof_of_inclusion(m_tree, node_number):
-    proof = str(m_tree.root.data)
-    node = m_tree.leaves[node_number]
-    while node.data != m_tree.root.data:
-        proof += " " + get_prefix_of_brother(node) + get_brother(node)
-        node = node.parent
-    return proof
-
-
-def get_prefix_of_brother(node):
-    if node.parent.left.data == node.data:
-        return "1"
-    return "0"
-
-
-def get_brother(node):
-    if node.parent.left.data == node.data:
-        return str(node.parent.right.data)
-    return str(node.parent.left.data)
 
 
 def is_power_of_2(n: int):
