@@ -35,10 +35,6 @@ class SparseMerkleTree:
     def mark_leaf(self, digest):
         SparseMerkleTree.mark_leaf.bit_to_int_offset = ord('0')
 
-        # check input is valid
-        if 4 * len(digest) != self.depth:
-            print_error("digest isn't in the correct length!")
-
         # create the path to the digest leaf
         path_to_digest = self._get_route_to_leaf(digest)
 
