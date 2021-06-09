@@ -36,7 +36,7 @@ class SparseMerkleTree:
         SparseMerkleTree.mark_leaf.bit_to_int_offset = ord('0')
 
         # check input is valid
-        if len(digest) != self.depth:
+        if 4 * len(digest) != self.depth:
             print_error("digest isn't in the correct length!")
 
         # create the path to the digest leaf
@@ -46,46 +46,52 @@ class SparseMerkleTree:
         path_to_digest[-1] = MerkleBinaryNode.create_non_hash_leaf('1')
 
         # update the path to the digest leaf and try to segment
+        # this also update the keys from the marked node towards the root
         path_int = int(digest, 8)
-        for i in range(len(path_to_digest) - 2, -1, -1):
-            # update tree
+        for i in range(len(path_to_digest) - 2, -1, -1):  # go through the path in reverse order (including the root)
+            # create a new copy of the current node with updated son
+            replaced_node = path_to_digest[i]
             if path_int & 1 == BinaryNode.RIGHT_DIRECTION:
                 path_to_digest[i] = MerkleBinaryNode(path_to_digest[i].left, path_to_digest[i + 1])
             else:
                 path_to_digest[i] = MerkleBinaryNode(path_to_digest[i + 1], path_to_digest[i].right)
             path_int = path_int >> 1
 
-            # If the subtrees are the same, save only one copy of it
-            node = path_to_digest[i]
-            if node.left.key == node.right.key:
-                node.left = node.right
+            # remove references from old node to current tree - to help clean out memory
+            replaced_node.one_way_detach_node()
 
-        # update the keys from the marked node towards the root
-        path_to_digest[-1].node_diffusion()
+            # if the subtrees are the same, save only one copy of it
+            node = path_to_digest[i]
+            if node.left.data == node.right.data:
+                node.right.parent = None
+                node.right_binding(node.left)
+
+        # update the root
+        self.root = path_to_digest[0]
 
     def get_root_key(self):
-        return self.root.key
+        return self.root.data
 
     def generate_proof_of_inclusion(self, digest):
         # initialize
-        root_sign = self.root.compute_key()
+        root_sign = self.root.data
         proof = []
         route_to_digest = self._get_route_to_leaf(digest)
 
         # skip nodes that can be computed using only the digest value
-        while len(route_to_digest) > 1 and route_to_digest[-2].left.key == route_to_digest[-2].right.key:
+        while len(route_to_digest) > 1 and route_to_digest[-2].left.data == route_to_digest[-2].right.data:
             route_to_digest.pop(-1)
         # if at least one node was removed, append the last hash of digest that is the same as the hash of its sibling
         if len(route_to_digest) < self.depth:
-            proof.append(route_to_digest[-1].key)
+            proof.append(route_to_digest[-1].data)
 
         # create the rest of the proof
         for i in range(len(route_to_digest) - 2, -1, -1):
             # if the left son is on the path to digest, add the other sibling to the proof
             if route_to_digest[i].left is route_to_digest[i + 1]:
-                proof.append(route_to_digest[i].right.key)
+                proof.append(route_to_digest[i].right.data)
             else:
-                proof.append(route_to_digest[i].left.key)
+                proof.append(route_to_digest[i].left.data)
 
         # return proof
         return root_sign, proof
