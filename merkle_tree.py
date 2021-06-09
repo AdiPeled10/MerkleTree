@@ -12,6 +12,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography import x509
+from MerkleNode import MerkleBinaryNode
+import RSAsignature
 
 
 class BinaryMerkleTree:
@@ -129,33 +131,57 @@ def case5():
     print(pem_public_key)
 
 
-def case6():
-    pass
+def read_key_from_user(prefix=''):
+    line = input()
+    key = [prefix]
+    while line != '':
+        key.append(line)
+        line = input()
+    return '\n'.join(key)
 
 
-def case7():
-    pass
+def sign_root(merkle_tree, sign_algo, private_key):
+    sk_bytes = private_key.encode('ASCII')
+    data = merkle_tree.get_root_key().encode('ASCII')
+    sign = sign_algo.sign(data, sk_bytes)
+    print(sign)
+
+
+def verify_sign(sign_algo, pub_key):
+    user_input = input()
+    sign_len = user_input.find(' ')
+    sign = user_input[:sign_len]
+    signed_text = user_input[sign_len + 1:].encode('ASCII')
+    print(sign_algo.verify(signed_text, pub_key, sign))
 
 
 merkle_tree = BinaryMerkleTree()
+sign_algo = RSAsignature.RSAsignature
 while True:
     user_input = input()
 # for i in range(20):
 #     user_input = '1 ' + chr(ord('a') + i)
-    args = user_input.split()
-    if args[0] == '1':
+    option = user_input[0]  # TODO multichar option
+    if option == '1':
         case1(merkle_tree, user_input)
-    elif args[0] == '2':
+    elif option == '2':
         case2(merkle_tree)
-    elif args[0] == '3':
+    elif option == '3':
         case3(merkle_tree, int(args[1]))
-    elif args[0] == '4':
+    elif option == '4':
         case4(args)
-    elif args[0] == '5':
-        case5()
-    elif args[0] == '6':
-        case6(args)
-    elif args[0] == '7':
-        case7(args)
+    elif option == '5':
+        sk, vk = sign_algo.generate()
+        print(sk)
+        print(vk)
+    elif option == '6':
+        private_key = user_input[2:]
+        private_key = read_key_from_user(private_key)
+        sign_root(merkle_tree, sign_algo, private_key)
+    elif option == '7':
+        pub_key = user_input[2:]
+        pub_key = read_key_from_user(pub_key)
+        verify_sign(sign_algo, pub_key)
 
 # merkle_tree.inorder_traversal()
+
