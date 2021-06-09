@@ -156,9 +156,10 @@ while True:
     elif option == '10':
         digest = user_input[3:]
         proof = sparse_merkle_tree.generate_proof_of_inclusion(digest)
+        last = proof.pop()
         for key in proof:
             print(key, end=' ')
-        print('\r')  # delete last space and print newline
+        print(last)
     elif option == '11':
         arg1_end = user_input.find(' ', option_len + 1)
         arg2_end = arg1_end + 2  # +1 to skip space and another +1 for the len of the classification bit
