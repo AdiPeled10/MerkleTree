@@ -165,7 +165,8 @@ while True:
         digest = user_input[option_len + 1:arg1_end]
         classification_bit = user_input[arg1_end + 1: arg2_end]
         proof = user_input[arg2_end + 1:].split(' ')
-        sparse_merkle_tree.check_proof_of_inclusion(digest, classification_bit, proof)
+        result = sparse_merkle_tree.check_proof_of_inclusion(digest, classification_bit, proof)
+        print(result)
 
 
 
