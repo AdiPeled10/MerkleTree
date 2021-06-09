@@ -57,13 +57,9 @@ class SparseMerkleTree:
                 path_to_digest[i] = MerkleBinaryNode(path_to_digest[i + 1], path_to_digest[i].right)
             path_int = path_int >> 1
 
-            # remove references from old node to current tree - to help clean out memory
-            replaced_node.one_way_detach_node()
-
             # if the subtrees are the same, save only one copy of it
             node = path_to_digest[i]
             if node.left.data == node.right.data:
-                node.right.parent = None
                 node.right_binding(node.left)
 
         # update the root

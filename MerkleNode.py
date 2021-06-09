@@ -43,14 +43,3 @@ class MerkleBinaryNode(BinaryNode):
             brother = self.parent.right
         return str(brother.data)
 
-    def one_way_detach_node(self):
-        """
-        deletes references to other nodes from this nodes.
-        one-way because it ignores pointers from nodes to self.
-        :return: None.
-        """
-        # remove references from old node to current tree - to help clean out memory
-        self.parent = None
-        self.left = None
-        self.right = None
-
