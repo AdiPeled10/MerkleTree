@@ -72,15 +72,15 @@ while True:
     user_input = input()
 # for i in range(20):
 #     user_input = '1 ' + chr(ord('a') + i)
-    args = user_input.split()
+    args = user_input.split(' ')
     if args[0] == '1':
         case1(merkle_tree, user_input)
     elif args[0] == '2':
         case2(merkle_tree)
     elif args[0] == '5':
         sk, vk = sign_algo.generate()
-        print(sk.decode('ASCII'))
-        print(vk.decode('ASCII'))
+        print(sk)
+        print(vk)
     elif args[0] == '6':
         user_input = '''6 -----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEA1MAmLr5TwN8OnQF9OjfWGyGuHfl5056u7XBjYcsidkQHVLkK
@@ -111,9 +111,26 @@ T085EM/HlQer1QQjfkdepVuCL7mdDjKcxVMiuMKPWtVlsJjtJMa11smmdqZ5UT/w
 -----END RSA PRIVATE KEY-----'''
         sk_bytes = user_input[2:].encode('ASCII')
         data = merkle_tree.get_root_key().encode('ASCII')
-        sign = sign_algo.sign(data, sk_bytes).decode('ASCII')
+        sign = sign_algo.sign(data, sk_bytes)
         print(sign)
-        exit(0)
+    elif args[0] == '7':
+        user_input = '''7 -----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1MAmLr5TwN8OnQF9OjfW
+GyGuHfl5056u7XBjYcsidkQHVLkK8NhFzSvBnQbi18PcXVSLusLPVnGs6a9rfN9N
+kCM6uSom0+lpFgMWuD/7w0HPIW7Cw0hVlFNWvZ8vv5uzA/mzpF8S1fRmCMkfQyP4
+TDJ2MImQxcdkWDpFDq1pmvRJweavzUnc2eUmuz4bwLYwv3CBKDlCSdIAFCkVP6PJ
+l8cbZkOPqbVPMW+MLf+pZrKfWczCxCnzHmLbzngClQp+4meAtGOGgKKwsmS1eA0B
+AYfao0g+cu1ESU5ePea/jrX0nJONvDOAeh00keQvxE1xoEnKppbKT2F6RTyBITbC
+mwIDAQAB
+-----END PUBLIC KEY-----
+
+LhnptHJUc4M0GVZR+wbp5NC6owLwH2+N/UpOKV6jnyH8iA8YoVSQkMU63z8QZyr50L1f4hTWSxZbjzeQ1Rm/1OyAyX9QdQHIrMWRjOx0GPfqPi4wmcmF9ZxPr7ShwRZtbqz9mAekKYDell44Pj21xKsFFy4PgpnxrXFNppPOA3ZpQk245bYPIdzYpcmq0FyYx5RQQCQYBV69QrQOAvvkVVkwZbiqI0/+tZWmfNdV/x6E3PWYljSccMLW/m4nhcy+XQ39Q2oxIzYlobwndW3epxEReLzP7qeN9BR/BVew2yCn4quhm1fA7544mpZaW0VynQDRHBy7gqJDhuWRLjKOcQ== ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb'''
+        pub_key = args[1]
+        sign = args[2]
+        signed_text = args[3].encode('ASCII')
+
+
+
 
 # merkle_tree.inorder_traversal()
 

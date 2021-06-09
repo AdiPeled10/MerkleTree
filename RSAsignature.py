@@ -25,7 +25,7 @@ class RSAsignature:
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
 
-        return private_pem, public_pem
+        return private_pemdecode('ASCII'), public_pemdecode('ASCII')
 
     @staticmethod
     def sign(data: bytes, pem_private_key):
@@ -39,10 +39,15 @@ class RSAsignature:
             ),
             hashes.SHA256()
         )
-        return base64.b64encode(signature)
+        return base64.b64encode(signature).decode('ASCII')
 
     @staticmethod
-    def verify(data, pem_public_key, signature):
+    def verify(data: bytes, pem_public_key, signature):
+        # encoding params
+        pem_public_key = pem_public_key.encode('ASCII')
+        signature = base64.b64encode('ASCII')
+
+        # verifying
         public_key = serialization.load_pem_public_key(pem_public_key, default_backend())
 
         flag = public_key.verify(
