@@ -70,16 +70,18 @@ class SparseMerkleTree:
 
     def generate_proof_of_inclusion(self, digest):
         # initialize
-        root_sign = self.root.data
-        proof = []
+        proof = [self.root.data]
         route_to_digest = self._get_route_to_leaf(digest)
 
         # skip nodes that can be computed using only the digest value
-        while len(route_to_digest) > 1 and route_to_digest[-2].left.data == route_to_digest[-2].right.data:
+        while len(route_to_digest) > 1 and route_to_digest[-2].left is route_to_digest[-2].right:
             route_to_digest.pop(-1)
-        # if at least one node was removed, append the last hash of digest that is the same as the hash of its sibling
+        # if at least two nodes were removed, append the last hash of node that its subtree is actually a linked list
         if len(route_to_digest) < self.depth:
             proof.append(route_to_digest[-1].data)
+        # if only one node was removed, return it to the route - it's smaller than a hash
+        elif len(route_to_digest) == self.depth:
+            proof.append(route_to_digest[-1].left.data)
 
         # create the rest of the proof
         for i in range(len(route_to_digest) - 2, -1, -1):
@@ -90,7 +92,7 @@ class SparseMerkleTree:
                 proof.append(route_to_digest[i].left.data)
 
         # return proof
-        return root_sign, proof
+        return proof
 
     def check_proof_of_inclusion(self, digest, classification_bit, proof):
         # parse digest and proof

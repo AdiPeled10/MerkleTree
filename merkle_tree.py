@@ -155,11 +155,10 @@ while True:
         print(sparse_merkle_tree.get_root_key())
     elif option == '10':
         digest = user_input[3:]
-        root_key, proof = sparse_merkle_tree.generate_proof_of_inclusion(digest)
-        print(root_key, end=' ')
+        proof = sparse_merkle_tree.generate_proof_of_inclusion(digest)
         for key in proof:
             print(key, end=' ')
-        print()
+        print('\r')  # delete last space and print newline
     elif option == '11':
         arg1_end = user_input.find(' ', option_len + 1)
         arg2_end = arg1_end + 2  # +1 to skip space and another +1 for the len of the classification bit
