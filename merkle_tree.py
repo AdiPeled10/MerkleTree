@@ -73,10 +73,11 @@ def case2(m_tree):
 
 
 def case3(m_tree, node_number):
-    print(proof_of_inclusion(m_tree, node_number))
+    print(m_tree.proof_of_inclusion(node_number))
 
 
-def case4(arg):
+def case4(user_input):
+    arg = user_input.split(' ')
     temp = arg[1]
     root = arg[2]
     for index in range(3, len(arg)):
@@ -126,9 +127,10 @@ while True:
     elif option == '2':
         case2(merkle_tree)
     elif option == '3':
-        case3(merkle_tree, int(args[1]))
+        leaf_num = int(user_input[2:])
+        case3(merkle_tree, leaf_num)
     elif option == '4':
-        case4(args)
+        case4(user_input)
     elif option == '5':
         sk, vk = sign_algo.generate()
         print(sk)
