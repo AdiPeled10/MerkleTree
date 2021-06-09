@@ -23,7 +23,7 @@ class SparseMerkleTree:
     def _get_route_to_leaf(self, digest):
         route = []
         mask = 1 << (self.depth - 1)
-        path_int = int(digest, 8)
+        path_int = int(digest, 16)
         next_node = self.root
         while next_node is not None:
             route.append(next_node)
@@ -47,7 +47,7 @@ class SparseMerkleTree:
 
         # update the path to the digest leaf and try to segment
         # this also update the keys from the marked node towards the root
-        path_int = int(digest, 8)
+        path_int = int(digest, 16)
         for i in range(len(path_to_digest) - 2, -1, -1):  # go through the path in reverse order (including the root)
             # create a new copy of the current node with updated son
             replaced_node = path_to_digest[i]
@@ -98,7 +98,7 @@ class SparseMerkleTree:
 
     def check_proof_of_inclusion(self, digest, classification_bit, proof):
         # parse digest and proof
-        path_int = int(digest, 8)
+        path_int = int(digest, 16)
         correct_final_result = proof[0]
         proof = proof[1]
 
