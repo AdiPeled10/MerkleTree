@@ -7,7 +7,6 @@ from cryptography.exceptions import InvalidSignature
 import base64
 
 
-
 class RSAsignature:
     _PUBLIC_KEY = 65537
 
@@ -26,7 +25,7 @@ class RSAsignature:
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
 
-        return private_pem.decode('ASCII'), public_pem.decode('ASCII')
+        return private_pem.decode('utf-8'), public_pem.decode('utf-8')
 
     @staticmethod
     def sign(data: bytes, pem_private_key):
@@ -45,7 +44,7 @@ class RSAsignature:
     @staticmethod
     def verify(data: bytes, pem_public_key, signature):
         # encoding params
-        pem_public_key = pem_public_key.encode('ASCII')
+        pem_public_key = pem_public_key.encode('utf-8')
         signature = base64.b64decode(signature)
 
         # reading public key
