@@ -3,6 +3,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import serialization
+from cryptography.exceptions import InvalidSignature
 import base64
 
 
@@ -25,7 +26,7 @@ class RSAsignature:
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
 
-        return private_pemdecode('ASCII'), public_pemdecode('ASCII')
+        return private_pem.decode('ASCII'), public_pem.decode('ASCII')
 
     @staticmethod
     def sign(data: bytes, pem_private_key):
@@ -45,19 +46,24 @@ class RSAsignature:
     def verify(data: bytes, pem_public_key, signature):
         # encoding params
         pem_public_key = pem_public_key.encode('ASCII')
-        signature = base64.b64encode('ASCII')
+        signature = base64.b64decode(signature)
 
-        # verifying
+        # reading public key
         public_key = serialization.load_pem_public_key(pem_public_key, default_backend())
 
-        flag = public_key.verify(
-            signature,
-            data,
-            padding.PSS(
-                mgf=padding.MGF1(hashes.SHA256()),
-                salt_length=padding.PSS.MAX_LENGTH
-            ),
-            hashes.SHA256()
-        )
-        return flag
+        # verifying
+        try:
+            public_key.verify(
+                signature,
+                data,
+                padding.PSS(
+                    mgf=padding.MGF1(hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
+                hashes.SHA256()
+            )
+            sign_matched = True
+        except InvalidSignature:
+            sign_matched = False
+        return sign_matched
 
