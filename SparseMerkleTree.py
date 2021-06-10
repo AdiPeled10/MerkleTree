@@ -9,6 +9,75 @@ def print_error(msg):
     print(msg)
 
 
+class SparseBinaryNode:
+    LEFT_DIRECTION = 0
+    RIGHT_DIRECTION = 1
+
+    def __init__(self, left_son, right_son, value):
+        self.count_single_refs = 0
+        self.is_sub_segment = False
+        if left_son is not None:
+            if left_son is right_son:
+                left_son.is_sub_segment = True
+            else:
+                left_son.count_single_refs += 1
+                right_son.count_single_refs += 1
+        self.data = value
+        self.left = left_son
+        self.right = right_son
+
+    def get_son(self, direction):
+        node = None
+        if direction == SparseBinaryNode.LEFT_DIRECTION:
+            node = self.left
+        elif direction == SparseBinaryNode.RIGHT_DIRECTION:
+            node = self.right
+        return node
+
+
+class SparseMerkleDB:
+    def __init__(self, depth):
+        # create level dictionaries - used in every level except root level
+        usage_dicts = []
+        while depth >= 0:
+            depth -= 1
+            usage_dicts.append({})
+        self.usage_dicts = usage_dicts
+
+        # create basic leaves
+        self.usage_dicts[0]['0'] = SparseBinaryNode(None, None, '0')
+        self.usage_dicts[0]['1'] = SparseBinaryNode(None, None, '1')
+
+    def create_node(self, height, left_son, right_son):
+        hash_table = self.usage_dicts[height]
+        value = hash_function(left_son.data + right_son.data)
+        if value in hash_table:
+            response = hash_table[value]
+            # left_son.direct_ptrs += 1
+            # right_son.direct_ptrs += 1
+        else:
+            response = SparseBinaryNode(left_son, right_son, value)
+            hash_table[value] = response
+        return response
+
+    def delete_node(self, height, node: SparseBinaryNode):
+        # node.count_single_refs -= 1
+        # node.left.direct_ptrs -= 1
+        # node.right.direct_ptrs -= 1
+        if not node.is_sub_segment and node.count_single_refs <= 0:
+            if node.left is node.right:
+                node.left.is_sub_segment = False
+            else:
+                node.left.count_single_refs -= 1
+                node.right.count_single_refs -= 1
+            self.usage_dicts[height].pop(node.data)
+            return True
+        return False
+
+    def get_leaf(self, value):
+        return self.usage_dicts[0][value]
+
+
 class SparseMerkleTree:
     """
     This class emulates a complete merkle tre with 2**depth indicator leaves (0 or 1).
@@ -17,15 +86,12 @@ class SparseMerkleTree:
         1. The tree is initialize as linked list -
                 Because all leaves are the same, all the hashes in the same height have the same value, this allows me
                 to save just 1 node per height (depth+1 nodes).
-        2. Segmentation -
-                When a node is updated, it will check if its two sons have the same hash, if so, it will free the right
-                son and make the left son as both left & right sons. This gives a very strong space saving property - if
-                there is 2 adjacent strips of l leaves that are the same, their mutual ancestor will have 2 sons with
-                the same hashes and the same subtree, so only 1 subtree will be saved in memory.
-                One will suggest to use a dictionary of values for each level (level=all nodes with the same height) to
-                reuse subtree even more, but I claim that for levels (except the leaves level) it will not profit us
-                with more segments because of the initial state, the fact you can't "unmark" leaves, and the fact that
-                if there are bits between 2 equal patterns, the .
+        2. level-hash-tables -
+                A level k in a tree is all the nodes of the tree with height k.
+                For each level there is a hash table from data to the first node that needed it and still in the tree.
+                This allows a great reuse of subtrees (very effective for at least heights 0 to 7 even with random
+                inputs), and because the leaves can only change from 0 to 1, it will start shrinking the memory usage
+                after enough leaves were marked.
         3. When marking a leaf, recreate a copy of the route from the root to the leaf because nodes are immutable -
                 This promise us that if some other node points to a node in the original route (possible due to
                 segmentation), the update will not corrupt its data.
@@ -39,10 +105,15 @@ class SparseMerkleTree:
         """
         # for 2**256 leaves we need depth of 256
         self.depth = depth
-        curr = MerkleBinaryNode.create_non_hash_leaf('0')
+        # create level dictionaries - used in every level except root level
+        self.db = SparseMerkleDB(depth)
+        # create tree
+        curr = self.db.get_leaf('0')
+        curr_height = 1
         while depth > 0:
             depth -= 1
-            curr_parent = MerkleBinaryNode(curr, curr)
+            curr_parent = self.db.create_node(curr_height, curr, curr)
+            curr_height += 1
             curr = curr_parent
         self.root = curr
 
@@ -65,24 +136,27 @@ class SparseMerkleTree:
         path_to_digest = self._get_route_to_leaf(digest)
 
         # update the digest leaf
-        path_to_digest[-1] = MerkleBinaryNode.create_non_hash_leaf('1')
+        old_path_to_digest = path_to_digest[:]
+        path_to_digest[-1] = self.db.get_leaf('1')
 
-        # update the path to the digest leaf and try to segment
+        # update the path to the digest leaf
         # this also update the keys from the marked node towards the root
         path_int = int(digest, 16)
+        curr_height = 1
         for i in range(len(path_to_digest) - 2, -1, -1):  # go through the path in reverse order (including the root)
             # create a new copy of the current node with updated son
-            replaced_node = path_to_digest[i]
-            if path_int & 1 == BinaryNode.RIGHT_DIRECTION:
-                path_to_digest[i] = MerkleBinaryNode(path_to_digest[i].left, path_to_digest[i + 1])
+            if path_int & 1 == SparseBinaryNode.RIGHT_DIRECTION:
+                path_to_digest[i] = self.db.create_node(curr_height, path_to_digest[i].left, path_to_digest[i + 1])
             else:
-                path_to_digest[i] = MerkleBinaryNode(path_to_digest[i + 1], path_to_digest[i].right)
+                path_to_digest[i] = self.db.create_node(curr_height, path_to_digest[i + 1], path_to_digest[i].right)
+            # self.db.delete_node(curr_height, replaced_node)
             path_int = path_int >> 1
+            curr_height += 1
 
-            # if the subtrees are the same, save only one copy of it
-            node = path_to_digest[i]
-            if node.left.data == node.right.data:
-                node.right_binding(node.left)
+        # delete nodes
+        curr_height = self.depth
+        while self.db.delete_node(curr_height, old_path_to_digest.pop(0)):
+            curr_height -= 1
 
         # update the root
         self.root = path_to_digest[0]
@@ -137,7 +211,7 @@ class SparseMerkleTree:
 
         # compute rest of the hashes using the proof
         for sibling_hash in proof:
-            if path_int & 1 == BinaryNode.RIGHT_DIRECTION:
+            if path_int & 1 == SparseBinaryNode.RIGHT_DIRECTION:
                 current_hash_val = hash_function(sibling_hash + current_hash_val)
             else:
                 current_hash_val = hash_function(current_hash_val + sibling_hash)
