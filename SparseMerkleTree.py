@@ -10,7 +10,33 @@ def print_error(msg):
 
 
 class SparseMerkleTree:
+    """
+    This class emulates a complete merkle tre with 2**depth indicator leaves (0 or 1).
+    The class make a smart use of the fact bit-patterns reoccur and each hash is unique. It is done by the following
+    logic:
+        1. The tree is initialize as linked list -
+                Because all leaves are the same, all the hashes in the same height have the same value, this allows me
+                to save just 1 node per height (depth+1 nodes).
+        2. Segmentation -
+                When a node is updated, it will check if its two sons have the same hash, if so, it will free the right
+                son and make the left son as both left & right sons. This gives a very strong space saving property - if
+                there is 2 adjacent strips of l leaves that are the same, their mutual ancestor will have 2 sons with
+                the same hashes and the same subtree, so only 1 subtree will be saved in memory.
+                One will suggest to use a dictionary of values for each level (level=all nodes with the same height) to
+                reuse subtree even more, but I claim that for levels (except the leaves level) it will not profit us
+                with more segments because of the initial state, the fact you can't "unmark" leaves, and the fact that
+                if there are bits between 2 equal patterns, the .
+        3. When marking a leaf, recreate a copy of the route from the root to the leaf because nodes are immutable -
+                This promise us that if some other node points to a node in the original route (possible due to
+                segmentation), the update will not corrupt its data.
+                When a route is no longer needed by any node, the garbage collector will notice no active member is
+                pointing to the route and it will release its memory.
+    """
     def __init__(self, depth: int):
+        """
+        Creates a full sparse tree with given depth (which means, 2**depth leaves), each leaf is initial with '0'.
+        :param depth: The wanted size of the sparse merkle tree.
+        """
         # for 2**256 leaves we need depth of 256
         self.depth = depth
         curr = MerkleBinaryNode.create_non_hash_leaf('0')
