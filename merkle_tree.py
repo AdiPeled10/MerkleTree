@@ -121,8 +121,6 @@ merkle_tree = BinaryMerkleTree()
 sign_algo = RSAsignature.RSAsignature
 while True:
     user_input = input()
-# for i in range(20):
-#     user_input = '1 ' + chr(ord('a') + i)
     option_len = user_input.find(' ')
     if option_len == -1:
         option_len = len(user_input)
