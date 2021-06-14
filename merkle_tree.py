@@ -3,7 +3,7 @@ import math
 import base64
 
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
-
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from MerkleNode import MerkleBinaryNode, hash_function
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -129,8 +129,15 @@ def case5():
     print(pem_public_key)
 
 
-def case6():
-    pass
+def case6(message, key):
+    private_key_bytes = key.encode("ascii")
+    private_key = load_pem_public_key(private_key_bytes)
+    signature = private_key.sign(message,
+                                 padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
+                                             salt_length=padding.PSS.MAX_LENGTH),
+                                 hashes.SHA256())
+    print(signature)
+    return signature
 
 
 def case7():
@@ -154,7 +161,7 @@ while True:
     elif args[0] == '5':
         case5()
     elif args[0] == '6':
-        case6(args)
+        case6(merkle_tree.root.data, user_input[2:])
     elif args[0] == '7':
         case7(args)
 
