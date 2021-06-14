@@ -22,6 +22,10 @@ class BinaryNode:
         self.data = data
 
     def get_son(self, direction):
+        """
+        :param direction:
+        :return: letf/right son, according to direction
+        """
         node = None
         if direction == BinaryNode.LEFT_DIRECTION:
             node = self.left
@@ -30,6 +34,11 @@ class BinaryNode:
         return node
 
     def left_binding(self, child):
+        """
+        bind left child and parent
+        :param child:
+        :return:
+        """
         if self.left is not None and self.left.parent is self:  # if I'm the main father of the current left son
             self.left.parent = None  # delete pointer
         self.left = child
@@ -40,16 +49,31 @@ class BinaryNode:
         child.parent = self
 
     def right_binding(self, child):
+        """
+        bind right child and parent
+        :param child:
+        :return:
+        """
         if self.right is not None and self.right.parent is self:  # if I'm the main father of the current right son
             self.right.parent = None  # delete pointer
         self.right = child
         child.parent = self
 
     def triangle_binding(self, left, right):
+        """
+        bind parent with two sons
+        :param left:
+        :param right:
+        :return:
+        """
         self.left_binding(left)
         self.right_binding(right)
 
     def inorder_print(self):
+        """
+        help method.
+        :return:
+        """
         if self is not None:
             print(self.height * ' ' + self.data)
             if self.left is not None:
@@ -58,6 +82,11 @@ class BinaryNode:
 
 
 def hash_function(s):
+    """
+
+    :param s:
+    :return: hash value
+    """
     s = str(s)
     hash_string = sha256(s.encode()).hexdigest()
     return hash_string
@@ -65,6 +94,12 @@ def hash_function(s):
 
 class MerkleBinaryNode(BinaryNode):
     def __init__(self, left_son, right_son, value=None):
+        """
+        initiate a merkle binary node
+        :param left_son:
+        :param right_son:
+        :param value:
+        """
         if ((left_son is None or right_son is None) and value is None) or \
              (left_son is not None and right_son is not None and value is not None):
             raise ValueError("Bad parameters! parameters should be 2 MerkleNodes or a non-None value, but never both.")
@@ -77,11 +112,20 @@ class MerkleBinaryNode(BinaryNode):
 
     @staticmethod
     def create_non_hash_leaf(value):
+        """
+
+        :param value:
+        :return: binary merkle leaf with non hashed value
+        """
         leaf = MerkleBinaryNode(None, None, '')
         leaf.data = value
         return leaf
 
     def node_diffusion(self):
+        """
+        Adding a leaf requires updating the values up the tree
+        :return:
+        """
         if self.left is not None:  # possible only if both sons are not None
             self.data = hash_function(self.left.data + self.right.data)
         if self.parent is not None:
@@ -93,6 +137,10 @@ class MerkleBinaryNode(BinaryNode):
         return "0"
 
     def get_brother_data(self):
+        """
+
+        :return: date of the node brother (another node with same parent)
+        """
         brother = self.parent.left
         if brother is self:
             brother = self.parent.right
@@ -105,12 +153,22 @@ class BinaryMerkleTree:
         self.leaves = []
 
     def get_root_key(self):
+        """
+        :return: value of the tree's root
+        """
         if self.root is None:
             return ''
         return self.root.data
 
     def add_leaf(self, node: MerkleBinaryNode):
+        """
+
+        :param node:
+        :return:
+        """
+        # add to the leaves array
         self.leaves.append(node)
+        # first node check:
         if len(self.leaves) == 1:
             self.root = node
             return 1
@@ -134,6 +192,11 @@ class BinaryMerkleTree:
         inserted_node_parent.node_diffusion()
 
     def proof_of_inclusion(self, node_number):
+        """
+
+        :param node_number:
+        :return: a string that is proof of correctness of information
+        """
         proof = str(self.root.data)
         node = self.leaves[node_number]
         while node.data != self.root.data:
@@ -146,6 +209,11 @@ class BinaryMerkleTree:
 
 
 def is_power_of_2(n: int):
+    """
+    calculate if n is a power of 2 with O(1) complexity
+    :param n:
+    :return: true if n is a power of 2, false otherwise
+    """
     if n == 0:
         return False
     n_minus_one = n - 1
@@ -269,6 +337,11 @@ class RSAsignature:
 
     @staticmethod
     def generate(key_size=2048):
+        """
+
+        :param key_size:
+        :return: private and public keys
+        """
         private_key = rsa.generate_private_key(public_exponent=RSAsignature._PUBLIC_KEY,
                                                key_size=key_size, backend=default_backend())
         private_pem = private_key.private_bytes(
@@ -286,6 +359,12 @@ class RSAsignature:
 
     @staticmethod
     def sign(data: bytes, pem_private_key):
+        """
+
+        :param data:
+        :param pem_private_key:
+        :return: sing of the key over the data
+        """
         private_key = serialization.load_pem_private_key(pem_private_key, None, default_backend())
 
         signature = private_key.sign(
@@ -300,6 +379,13 @@ class RSAsignature:
 
     @staticmethod
     def verify(data: bytes, pem_public_key, signature):
+        """
+
+        :param data:
+        :param pem_public_key:
+        :param signature:
+        :return: verify the sign is correct
+        """
         # encoding params
         pem_public_key = pem_public_key.encode('utf-8')
         signature = base64.b64decode(signature)
@@ -342,6 +428,7 @@ def case4(user_input):
     arg = user_input.split(' ')
     curr_hash = hash_function(arg[1])
     root = arg[2]
+    # loop over the chunks of the string, verify the last hash value identify to the root
     for index in range(3, len(arg)):
         if arg[index][0] == '0':
             curr_hash = hash_function(arg[index][1:] + curr_hash)
