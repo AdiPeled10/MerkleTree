@@ -31,3 +31,15 @@ class MerkleBinaryNode(BinaryNode):
             self.data = hash_function(self.left.data + self.right.data)
         if self.parent is not None:
             self.parent.node_diffusion()
+
+    def get_prefix_of_brother(self):
+        if self.parent.left is self:
+            return "1"
+        return "0"
+
+    def get_brother_data(self):
+        brother = self.parent.left
+        if brother is self:
+            brother = self.parent.right
+        return str(brother.data)
+

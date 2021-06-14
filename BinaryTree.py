@@ -9,20 +9,19 @@ class BinaryNode:
         self.height = 0
         self.data = data
 
-    def get_son(self, direction):
-        node = None
-        if direction == BinaryNode.LEFT_DIRECTION:
-            node = self.left
-        elif direction == BinaryNode.RIGHT_DIRECTION:
-            node = self.right
-        return node
-
     def left_binding(self, child):
+        if self.left is not None and self.left.parent is self:  # if I'm the main father of the current left son
+            self.left.parent = None  # delete pointer
         self.left = child
-        self.height = self.left.height + 1
+        if self.left is not None:
+            self.height = self.left.height + 1
+        else:
+            self.height = 0
         child.parent = self
 
     def right_binding(self, child):
+        if self.right is not None and self.right.parent is self:  # if I'm the main father of the current right son
+            self.right.parent = None  # delete pointer
         self.right = child
         child.parent = self
 

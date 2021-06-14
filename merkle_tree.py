@@ -1,17 +1,7 @@
 # Adi Peled, 318814308, Itamar Fisch, 312502602
-import math
-import base64
-
-from cryptography.hazmat.primitives.serialization import load_pem_public_key
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from MerkleNode import MerkleBinaryNode, hash_function
-from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography import x509
+import RSAsignature
+from SparseMerkleTree import SparseMerkleTree
 
 
 class BinaryMerkleTree:
@@ -48,6 +38,14 @@ class BinaryMerkleTree:
         # updating all keys in the path to the new node
         inserted_node_parent.node_diffusion()
 
+    def proof_of_inclusion(self, node_number):
+        proof = str(self.root.data)
+        node = self.leaves[node_number]
+        while node.data != self.root.data:
+            proof += " " + node.get_prefix_of_brother() + node.get_brother_data()
+            node = node.parent
+        return proof
+
     def inorder_traversal(self):
         self.root.inorder_print()
 
@@ -56,27 +54,6 @@ def print_error(msg) :
     # TODO before submit make sure to replace the code with "print('')"
     # This function will help us make all the prints disappear before submit
     print(msg)
-
-
-def proof_of_inclusion(m_tree, node_number):
-    proof = str(m_tree.root.data)
-    node = m_tree.leaves[node_number]
-    while node.data != m_tree.root.data:
-        proof += " " + get_prefix_of_brother(node) + get_brother(node)
-        node = node.parent
-    return proof
-
-
-def get_prefix_of_brother(node):
-    if node.parent.left.data == node.data:
-        return "1"
-    return "0"
-
-
-def get_brother(node):
-    if node.parent.left.data == node.data:
-        return str(node.parent.right.data)
-    return str(node.parent.left.data)
 
 
 def is_power_of_2(n: int):
@@ -97,72 +74,100 @@ def case2(m_tree):
 
 
 def case3(m_tree, node_number):
-    print(proof_of_inclusion(m_tree, node_number))
+    print(m_tree.proof_of_inclusion(node_number))
 
 
-def case4(arg):
-    temp = arg[1]
+def case4(user_input):
+    arg = user_input.split(' ')
+    curr_hash = hash_function(arg[1])
     root = arg[2]
     for index in range(3, len(arg)):
         if arg[index][0] == '0':
-            temp = hash_function(arg[index][1:]+temp)
+            curr_hash = hash_function(arg[index][1:] + curr_hash)
         else:
-            temp = hash_function(temp+arg[index][1:])
-    if temp == root:
+            curr_hash = hash_function(curr_hash + arg[index][1:])
+    if curr_hash == root:
         print("True")
         return
     print("False")
 
 
-def case5():
-    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
-    public_key = private_key.public_key()
-
-    pem_private_key = private_key.private_bytes(encoding=serialization.Encoding.PEM,
-                                                format=serialization.PrivateFormat.TraditionalOpenSSL,
-                                                encryption_algorithm=serialization.NoEncryption())\
-        .decode("utf-8")
-    pem_public_key = private_key.public_key().public_bytes(serialization.Encoding.PEM,
-                                                           serialization.PublicFormat.SubjectPublicKeyInfo)\
-        .decode("utf-8")
-    print(pem_private_key)
-    print(pem_public_key)
+def read_key_from_user(prefix=''):
+    line = input()
+    key = [prefix]
+    while line != '':
+        key.append(line)
+        line = input()
+    return '\n'.join(key)
 
 
-def case6(message, key):
-    private_key_bytes = key.encode("ascii")
-    private_key = load_pem_public_key(private_key_bytes)
-    signature = private_key.sign(message,
-                                 padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
-                                             salt_length=padding.PSS.MAX_LENGTH),
-                                 hashes.SHA256())
-    print(signature)
-    return signature
+def sign_root(merkle_tree, sign_algo, private_key):
+    sk_bytes = private_key.encode('ASCII')
+    data = merkle_tree.get_root_key().encode('ASCII')
+    sign = sign_algo.sign(data, sk_bytes)
+    print(sign)
 
 
-def case7():
-    pass
+def verify_sign(sign_algo, pub_key):
+    user_input = input()
+    sign_len = user_input.find(' ')
+    sign = user_input[:sign_len]
+    signed_text = user_input[sign_len + 1:].encode('ASCII')
+    print(sign_algo.verify(signed_text, pub_key, sign))
 
 
+sparse_merkle_tree = SparseMerkleTree(256)
 merkle_tree = BinaryMerkleTree()
+sign_algo = RSAsignature.RSAsignature
 while True:
     user_input = input()
-# for i in range(20):
-#     user_input = '1 ' + chr(ord('a') + i)
-    args = user_input.split()
-    if args[0] == '1':
+    option_len = user_input.find(' ')
+    if option_len == -1:
+        option_len = len(user_input)
+    option = user_input[:option_len]
+    if option == '1':
         case1(merkle_tree, user_input)
-    elif args[0] == '2':
+    elif option == '2':
         case2(merkle_tree)
-    elif args[0] == '3':
-        case3(merkle_tree, int(args[1]))
-    elif args[0] == '4':
-        case4(args)
-    elif args[0] == '5':
-        case5()
-    elif args[0] == '6':
-        case6(merkle_tree.root.data, user_input[2:])
-    elif args[0] == '7':
-        case7(args)
+    elif option == '3':
+        leaf_num = int(user_input[2:])
+        case3(merkle_tree, leaf_num)
+    elif option == '4':
+        case4(user_input)
+    elif option == '5':
+        sk, vk = sign_algo.generate()
+        print(sk)
+        print(vk)
+    elif option == '6':
+        private_key = user_input[2:]
+        private_key = read_key_from_user(private_key)
+        sign_root(merkle_tree, sign_algo, private_key)
+    elif option == '7':
+        pub_key = user_input[2:]
+        pub_key = read_key_from_user(pub_key)
+        verify_sign(sign_algo, pub_key)
+    elif option == '8':
+        digest = user_input[2:]
+        sparse_merkle_tree.mark_leaf(digest)
+    elif option == '9':
+        print(sparse_merkle_tree.get_root_key())
+    elif option == '10':
+        digest = user_input[3:]
+        proof = sparse_merkle_tree.generate_proof_of_inclusion(digest)
+        last = proof.pop()
+        for key in proof:
+            print(key, end=' ')
+        print(last)
+    elif option == '11':
+        arg1_end = user_input.find(' ', option_len + 1)
+        arg2_end = arg1_end + 2  # +1 to skip space and another +1 for the len of the classification bit
+        digest = user_input[option_len + 1:arg1_end]
+        classification_bit = user_input[arg1_end + 1: arg2_end]
+        proof = user_input[arg2_end + 1:].split(' ')
+        result = sparse_merkle_tree.check_proof_of_inclusion(digest, classification_bit, proof)
+        print(result)
 
-# merkle_tree.inorder_traversal()
+
+
+
+
